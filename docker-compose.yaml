@@ -1,0 +1,38 @@
+# docker-compose.yaml file
+
+services:
+  # Nginx service configuration for serving static files and reverse proxying.
+  nginx:
+    build: . # Build the Nginx image using the Dockerfile in the current directory.
+    ports:
+      - 80:80 # Map host port 80 to container port 80 (HTTP).
+      - 443:443 # Map host port 443 to container port 443 (HTTPS).
+    volumes:
+      - ./static:/usr/share/nginx/html/ # Mount the static HTML files directory.
+      - /etc/letsencrypt:/etc/letsencrypt:ro # Mount SSL certificates (read-only).
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro # Mount the custom nginx.conf file (read-only).
+      - ./.well-known/acme-challenge/:/etc/nginx/.well-known/acme-challenge/:ro # Mount the ACME challenge directory (read-only).
+    restart: always # Ensure the container always restarts if it crashes.
+    networks:
+      - backend # Attach to the "backend" network for communication with other services.
+
+  # Frontend service configuration for the dynamic Node.js application.
+  # frontend:
+  #   container_name: container_name_frontend # Name of the container for easy reference.
+  #   build:
+  #     context: . # Path to the frontend directory (current directory).
+  #     dockerfile: Dockerfile # Specify the Dockerfile for building the frontend image.
+  #   ports:
+  #     - ${PORT}:3000 # Map dynamic host port (${PORT}) to the container's port 3000.
+  #   env_file:
+  #     - ./.env # Load environment variables from the specified file.
+  #   volumes:
+  #     - /app/node_modules # Persist node_modules directory to avoid reinstallation.
+  #   restart: always # Ensure the container always restarts if it crashes.
+  #   networks:
+  #     - backend # Attach to the "backend" network for communication with other services.
+
+# Define a custom network for inter-container communication.
+networks:
+  backend:
+    driver: bridge # Use the bridge driver for isolated networking.
